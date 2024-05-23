@@ -94,7 +94,7 @@ public class BeerOrderServiceImpl implements BeerOrderService {
 
             //todo impl
           //  publisher.publishEvent(new NewBeerOrderEvent(savedBeerOrder));
-
+            //todo get info from beer-service and get additional info
             return beerOrderMapper.beerOrderToDto(savedBeerOrder);
         }
         //todo add exception type
