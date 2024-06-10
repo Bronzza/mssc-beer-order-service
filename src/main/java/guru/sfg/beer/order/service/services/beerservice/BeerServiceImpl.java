@@ -1,7 +1,6 @@
 package guru.sfg.beer.order.service.services.beerservice;
 
-import guru.sfg.beer.order.service.web.model.BeerDto;
-import lombok.RequiredArgsConstructor;
+import common.model.BeerDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -19,8 +18,8 @@ import java.util.UUID;
 @Component
 public class BeerServiceImpl implements BeerService{
 
-    private final String UUID_PATH = "/api/v1/beer/{beerId}";
-    private final String UPC_PATH = "/api/v1/beerUpc/";
+    public final static String UUID_PATH = "/api/v1/beer/{beerId}";
+    public final static String UPC_PATH = "/api/v1/beerUpc/";
     private final RestTemplate restTemplate;
     private  String beerServiceHost;
 

@@ -1,4 +1,4 @@
-package com.example.jms_example.config;
+package guru.sfg.beer.order.service.config;
 
 
 
@@ -11,8 +11,10 @@ import org.springframework.jms.support.converter.MessageType;
 @Configuration
 public class JmsConfig {
 
-    public static final String MY_QUEUE = "my-hello-world";
-    public static final String MY_SEND_AND_RECEIVE_QUEUE = "send-receive";
+    public static final String BEER_ORDER_VALIDATION_REQUEST = "validate-order";
+    public static final String BEER_ORDER_VALIDATION_RESPONSE = "validate-order-result";
+    public static final String BEER_ORDER_ALLOCATION_REQUEST = "allocate-order-result";
+    public static final String BEER_ORDER_ALLOCATION_RESPONSE = "allocate-order-result";
 
     @Bean
     public MessageConverter messageConverter() {

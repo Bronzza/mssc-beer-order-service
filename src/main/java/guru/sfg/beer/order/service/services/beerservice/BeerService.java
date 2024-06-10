@@ -1,7 +1,6 @@
 package guru.sfg.beer.order.service.services.beerservice;
 
-import guru.sfg.beer.order.service.web.model.BeerDto;
-import org.springframework.stereotype.Component;
+import common.model.BeerDto;
 
 import java.util.Optional;
 import java.util.UUID;
