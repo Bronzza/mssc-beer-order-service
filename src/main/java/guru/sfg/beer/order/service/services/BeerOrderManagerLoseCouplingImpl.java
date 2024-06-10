@@ -7,6 +7,7 @@ import guru.sfg.beer.order.service.domain.BeerOrder;
 import guru.sfg.beer.order.service.repositories.BeerOrderRepository;
 import guru.sfg.beer.order.service.services.senders.BeerOrderStateMachineEventSender;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Qualifier("secondary")
 public class BeerOrderManagerLoseCouplingImpl implements BeerOrderManager {
 
     private final BeerOrderRepository repository;
@@ -28,33 +30,34 @@ public class BeerOrderManagerLoseCouplingImpl implements BeerOrderManager {
         return beerOrderPersisted;
     }
 
+    @Transactional
     @Override
     public void processValidationResult(UUID id, Boolean isValid) {
-        BeerOrder beerOrder = repository.findOneById(id);
-        sender.sendEvent(
-                BeerOrder.builder()
-                        .id(id)
-                        .orderStatus(isValid ? BeerOrderStatusEnum.VALIDATED : BeerOrderStatusEnum.VALIDATION_EXCEPTION)
-                        .build(),
-//                beerOrder,
-                isValid ? BeerOrderEventEnum.VALIDATION_PASSED : BeerOrderEventEnum.VALIDATION_FAILED);
+        BeerOrder beerOrder = repository.findById(id).orElseThrow();
 
-        BeerOrder beerOrderCurrentState = repository.findOneById(id);
-        sender.sendEvent(beerOrderCurrentState, BeerOrderEventEnum.ALLOCATE_ORDER);
+        if (isValid) {
+            sender.sendEvent(beerOrder, BeerOrderEventEnum.VALIDATION_PASSED);
+
+            BeerOrder beerOrderCurrentState = repository.findById(id).orElseThrow();
+            sender.sendEvent(beerOrderCurrentState, BeerOrderEventEnum.ALLOCATE_ORDER);
+        } else {
+            sender.sendEvent(
+                    beerOrder, BeerOrderEventEnum.VALIDATION_FAILED);
+        }
     }
 
     @Transactional
     @Override
     public void processAllocationResult(BeerOrderDto beerOrderDto, Boolean isAllocationError, Boolean isPendingInventory) {
-        BeerOrder beerOrder = repository.findOneById(beerOrderDto.getId());
+        BeerOrder beerOrder = repository.findById(beerOrderDto.getId()).orElseThrow();
         if (isAllocationError) {
             sender.sendEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_FAILED);
-            return;
         } else if (isPendingInventory) {
             sender.sendEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
         } else {
             sender.sendEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_SUCCESS);
         }
+
         updateAllocatedQty(beerOrderDto, beerOrder);
     }
 

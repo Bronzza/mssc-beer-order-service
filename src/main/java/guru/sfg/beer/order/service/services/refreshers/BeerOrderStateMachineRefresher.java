@@ -4,6 +4,7 @@ import common.enums.BeerOrderEventEnum;
 import common.enums.BeerOrderStatusEnum;
 import guru.sfg.beer.order.service.services.interceptor.BeerOrderStateInterceptor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 
 
-@Service
+@Configuration
 @RequiredArgsConstructor
 public class BeerOrderStateMachineRefresher implements StateMachineRefresher<BeerOrderStatusEnum, BeerOrderEventEnum, UUID> {
 

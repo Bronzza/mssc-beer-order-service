@@ -1,9 +1,9 @@
 package guru.sfg.beer.order.service.web.mappers;
 
+import common.model.BeerOrderLineDto;
+import common.model.BeerOrderLineDto.BeerOrderLineDtoBuilder;
 import guru.sfg.beer.order.service.domain.BeerOrderLine;
 import guru.sfg.beer.order.service.domain.BeerOrderLine.BeerOrderLineBuilder;
-import guru.sfg.beer.order.service.web.model.BeerOrderLineDto;
-import guru.sfg.beer.order.service.web.model.BeerOrderLineDto.BeerOrderLineDtoBuilder;
 import javax.annotation.processing.Generated;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2024-05-23T18:06:14+0700",
+    date = "2024-06-10T18:22:53+0700",
     comments = "version: 1.4.2.Final, compiler: javac, environment: Java 21.0.1 (Oracle Corporation)"
 )
 @Component
@@ -38,6 +38,7 @@ public class BeerOrderLineMapperImpl_ implements BeerOrderLineMapper {
         beerOrderLineDto.upc( line.getUpc() );
         beerOrderLineDto.beerId( line.getBeerId() );
         beerOrderLineDto.orderQuantity( line.getOrderQuantity() );
+        beerOrderLineDto.quantityAllocated( line.getQuantityAllocated() );
 
         return beerOrderLineDto.build();
     }
@@ -59,6 +60,7 @@ public class BeerOrderLineMapperImpl_ implements BeerOrderLineMapper {
         beerOrderLine.beerId( dto.getBeerId() );
         beerOrderLine.upc( dto.getUpc() );
         beerOrderLine.orderQuantity( dto.getOrderQuantity() );
+        beerOrderLine.quantityAllocated( dto.getQuantityAllocated() );
 
         return beerOrderLine.build();
     }

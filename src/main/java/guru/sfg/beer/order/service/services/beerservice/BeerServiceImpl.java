@@ -23,12 +23,14 @@ public class BeerServiceImpl implements BeerService{
     private final RestTemplate restTemplate;
     private  String beerServiceHost;
 
+
     public BeerServiceImpl(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
     }
 
     public void setBeerServiceHost(String beerServiceHost) {
         this.beerServiceHost = beerServiceHost;
+//        this.beerServiceHost = "localhost:8083";
     }
 
     @Override

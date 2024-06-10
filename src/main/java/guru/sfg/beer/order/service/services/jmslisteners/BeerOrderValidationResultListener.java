@@ -10,17 +10,19 @@ import guru.sfg.beer.order.service.services.BeerOrderManager;
 import guru.sfg.beer.order.service.services.senders.BeerOrderStateMachineEventSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class BeerOrderValidationResultListener {
 
-    private final BeerOrderManager beerOrderManagerImpl;
-//    private final BeerOrderManager beerOrderManagerLoseCouplingImpl;
+    @Autowired
+    @Qualifier("default") private  BeerOrderManager beerOrderManagerImpl;
+//    @Autowired @Qualifier("secondary") private BeerOrderManager beerOrderManagerLoseCouplingImpl;
 
     @Transactional
     @JmsListener(destination = JmsConfig.BEER_ORDER_VALIDATION_RESPONSE)

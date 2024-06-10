@@ -8,6 +8,7 @@ import guru.sfg.beer.order.service.config.JmsConfig;
 import guru.sfg.beer.order.service.services.BeerOrderManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BeerOrderAllocationListener {
 
-    private final BeerOrderManager beerOrderManagerImpl;
-    private final BeerOrderManager beerOrderManagerLoseCouplingImpl;
+    @Qualifier("default") private final BeerOrderManager beerOrderManagerImpl;
+//    @Qualifier("secondary")private final BeerOrderManager beerOrderManagerLoseCouplingImpl;
 
     @Transactional
-    @JmsListener(destination = JmsConfig.BEER_ORDER_VALIDATION_RESPONSE)
+    @JmsListener(destination = JmsConfig.BEER_ORDER_ALLOCATION_RESPONSE)
     public void listen(AllocationBeerOrderResponse event) {
 
         log.info("Processing allocation response, object : {}, allocationError: {}, pendingInventory: {}",
@@ -29,7 +30,7 @@ public class BeerOrderAllocationListener {
 
         beerOrderManagerImpl.processAllocationResult(event.getBeerOrder(), event.getAllocationError(),
                 event.getPendingInventory());
-        beerOrderManagerLoseCouplingImpl.processAllocationResult(event.getBeerOrder(),
-                event.getAllocationError(),                event.getPendingInventory());
+//        beerOrderManagerLoseCouplingImpl.processAllocationResult(event.getBeerOrder(),
+//                event.getAllocationError(),                event.getPendingInventory());
     }
 }

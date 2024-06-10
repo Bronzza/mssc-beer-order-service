@@ -9,6 +9,7 @@ import guru.sfg.beer.order.service.services.BeerOrderManager;
 import guru.sfg.beer.order.service.services.interceptor.BeerOrderStateInterceptor;
 import guru.sfg.beer.order.service.services.refreshers.BeerOrderStateMachineRefresher;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
@@ -21,6 +22,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Qualifier("default")
 public class BeerOrderManagerImpl implements BeerOrderManager {
 
     public static final String PAYMENT_ID_HEADER = "beer_order_id";
@@ -28,7 +30,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     private final StateMachineFactory<BeerOrderStatusEnum, BeerOrderEventEnum> smFactory;
     private final BeerOrderRepository repository;
     private final BeerOrderStateInterceptor interceptor;
-//    private final BeerOrderStateMachineRefresher refresher;
+    private final BeerOrderStateMachineRefresher refresher;
 
 
     @Transactional
@@ -44,33 +46,38 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     @Transactional
     @Override
     public void processValidationResult(UUID id, Boolean isValid) {
-        BeerOrder beerOrder = repository.findOneById(id);
-        sendBeerOrderEvent(
-                beerOrder,
-                isValid ? BeerOrderEventEnum.VALIDATION_PASSED : BeerOrderEventEnum.VALIDATION_FAILED);
+        BeerOrder beerOrder = repository.findById(id).orElseThrow();
 
-        BeerOrder beerOrderCurrentState = repository.findOneById(id);
-        sendBeerOrderEvent(beerOrderCurrentState, BeerOrderEventEnum.ALLOCATE_ORDER);
+        if (isValid) {
+            sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.VALIDATION_PASSED);
+
+            BeerOrder beerOrderCurrentState = repository.findById(id).orElseThrow();
+            sendBeerOrderEvent(beerOrderCurrentState, BeerOrderEventEnum.ALLOCATE_ORDER);
+        } else {
+            sendBeerOrderEvent(
+                    beerOrder, BeerOrderEventEnum.VALIDATION_FAILED);
+        }
     }
 
     @Transactional
     @Override
     public void processAllocationResult(BeerOrderDto beerOrderDto, Boolean isAllocationError, Boolean isPendingInventory) {
-        BeerOrder beerOrder = repository.findOneById(beerOrderDto.getId());
+        BeerOrder beerOrder = repository.findById(beerOrderDto.getId()).orElseThrow();
         if (isAllocationError) {
             sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_FAILED);
+            return;
         } else if (isPendingInventory) {
             sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
         } else {
             sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_SUCCESS);
         }
 
-        updateAllocatedQty(beerOrderDto, beerOrder);
+        updateAllocatedQty(beerOrderDto);
     }
 
-    private void updateAllocatedQty(BeerOrderDto beerOrderDto, BeerOrder beerOrder) {
-        BeerOrder allocatedOrder = repository.findOneById(beerOrderDto.getId());
+    private void updateAllocatedQty(BeerOrderDto beerOrderDto) {
 
+        BeerOrder allocatedOrder = repository.findById(beerOrderDto.getId()).orElseThrow();
         allocatedOrder.getBeerOrderLines().forEach(line -> {
             beerOrderDto.getBeerOrderLines().forEach(dtoLine -> {
                 if (dtoLine.getId().equals(line.getId())) {
@@ -79,27 +86,26 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
             });
         });
 
-        //in his implementation he save for same reason beerOrder comes as method param
         repository.saveAndFlush(allocatedOrder);
     }
 
     private void sendBeerOrderEvent(BeerOrder beerOrder, BeerOrderEventEnum orderEvent) {
 
-        StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> sm = build(beerOrder);
-
-
-        Message<BeerOrderEventEnum> msg = MessageBuilder.withPayload(orderEvent)
-                .setHeader(PAYMENT_ID_HEADER, beerOrder.getId())
-                .build();
-
-        sm.sendEvent(msg);
-
-//        StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> sm_v2
-//                = refresher.build(beerOrder.getId(), beerOrder.getOrderStatus());
+//        StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> sm = build(beerOrder);
+//
+//
 //        Message<BeerOrderEventEnum> msg = MessageBuilder.withPayload(orderEvent)
 //                .setHeader(PAYMENT_ID_HEADER, beerOrder.getId())
 //                .build();
-//        sm_v2.sendEvent(msg);
+//
+//        sm.sendEvent(msg);
+
+        StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> sm_v2
+                = refresher.build(beerOrder.getId(), beerOrder.getOrderStatus());
+        Message<BeerOrderEventEnum> msg = MessageBuilder.withPayload(orderEvent)
+                .setHeader(PAYMENT_ID_HEADER, beerOrder.getId())
+                .build();
+        sm_v2.sendEvent(msg);
     }
 
 

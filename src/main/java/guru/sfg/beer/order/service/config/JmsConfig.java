@@ -2,6 +2,7 @@ package guru.sfg.beer.order.service.config;
 
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
@@ -13,14 +14,15 @@ public class JmsConfig {
 
     public static final String BEER_ORDER_VALIDATION_REQUEST = "validate-order";
     public static final String BEER_ORDER_VALIDATION_RESPONSE = "validate-order-result";
-    public static final String BEER_ORDER_ALLOCATION_REQUEST = "allocate-order-result";
+    public static final String BEER_ORDER_ALLOCATION_REQUEST = "allocate-order";
     public static final String BEER_ORDER_ALLOCATION_RESPONSE = "allocate-order-result";
 
     @Bean
-    public MessageConverter messageConverter() {
+    public MessageConverter messageConverter(ObjectMapper objectMapper) {
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
         converter.setTargetType(MessageType.TEXT);
         converter.setTypeIdPropertyName("_type");
+        converter.setObjectMapper(objectMapper);
 
         return converter;
     }

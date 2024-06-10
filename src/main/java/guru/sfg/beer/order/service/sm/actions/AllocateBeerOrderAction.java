@@ -31,10 +31,10 @@ public class AllocateBeerOrderAction implements Action<BeerOrderStatusEnum, Beer
         log.info("Allocation action:...");
 
         UUID orderId = context.getMessage().getHeaders().get(BeerOrderManagerImpl.PAYMENT_ID_HEADER, UUID.class);
-        BeerOrder beerOrder = repository.findOneById(orderId);
+        BeerOrder beerOrder = repository.findById(orderId).orElseThrow();
         AllocationBeerOrderRequest allocationBeerOrderRequest = new AllocationBeerOrderRequest(mapper.beerOrderToDto(beerOrder));
 
-        log.info("Allocation request was send to: {}, //n with message {}", JmsConfig.BEER_ORDER_VALIDATION_REQUEST,
+        log.info("Allocation request was send to: {}, //n with message {}", JmsConfig.BEER_ORDER_ALLOCATION_REQUEST,
                 allocationBeerOrderRequest);
         jmsTemplate.convertAndSend(JmsConfig.BEER_ORDER_ALLOCATION_REQUEST, allocationBeerOrderRequest);
     }
