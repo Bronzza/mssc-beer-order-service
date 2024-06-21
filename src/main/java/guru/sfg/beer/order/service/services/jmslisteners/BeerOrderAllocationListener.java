@@ -1,9 +1,6 @@
 package guru.sfg.beer.order.service.services.jmslisteners;
 
-import common.enums.BeerOrderEventEnum;
-import common.enums.BeerOrderStatusEnum;
 import common.events.AllocationBeerOrderResponse;
-import common.events.ValidateBeerOrderResponse;
 import guru.sfg.beer.order.service.config.JmsConfig;
 import guru.sfg.beer.order.service.services.BeerOrderManager;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +19,7 @@ public class BeerOrderAllocationListener {
 //    @Qualifier("secondary")private final BeerOrderManager beerOrderManagerLoseCouplingImpl;
 
     @Transactional
-    @JmsListener(destination = JmsConfig.BEER_ORDER_ALLOCATION_RESPONSE)
+    @JmsListener(destination = JmsConfig.ALLOCATION_BEER_ORDER_RESPONSE)
     public void listen(AllocationBeerOrderResponse event) {
 
         log.info("Processing allocation response, object : {}, allocationError: {}, pendingInventory: {}",

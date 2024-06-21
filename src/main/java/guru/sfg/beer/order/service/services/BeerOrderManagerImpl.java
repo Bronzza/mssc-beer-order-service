@@ -9,6 +9,7 @@ import guru.sfg.beer.order.service.services.BeerOrderManager;
 import guru.sfg.beer.order.service.services.interceptor.BeerOrderStateInterceptor;
 import guru.sfg.beer.order.service.services.refreshers.BeerOrderStateMachineRefresher;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Qualifier("default")
 public class BeerOrderManagerImpl implements BeerOrderManager {
 
@@ -69,10 +71,19 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
         } else if (isPendingInventory) {
             sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
         } else {
+            log.info("Sending allocation success event");
             sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_SUCCESS);
         }
 
         updateAllocatedQty(beerOrderDto);
+    }
+
+    @Override
+    public void proccessPickUp(UUID id) {
+        BeerOrder beerOrder = repository.findById(id).orElseThrow();
+
+        sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.BEERORDER_PICKED_UP
+        );
     }
 
     private void updateAllocatedQty(BeerOrderDto beerOrderDto) {
@@ -87,6 +98,12 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
         });
 
         repository.saveAndFlush(allocatedOrder);
+    }
+
+    @Override
+    public void cancelOrder(UUID id) {
+        BeerOrder beerOrder = repository.findById(id).orElseThrow();
+        sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.CANCEL_ORDER);
     }
 
     private void sendBeerOrderEvent(BeerOrder beerOrder, BeerOrderEventEnum orderEvent) {

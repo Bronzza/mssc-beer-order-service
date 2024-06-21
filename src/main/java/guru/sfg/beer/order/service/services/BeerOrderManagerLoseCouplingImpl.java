@@ -61,8 +61,18 @@ public class BeerOrderManagerLoseCouplingImpl implements BeerOrderManager {
         updateAllocatedQty(beerOrderDto, beerOrder);
     }
 
+    @Override
+    public void proccessPickUp(UUID id) {
+
+    }
+
+    @Override
+    public void cancelOrder(UUID id) {
+
+    }
+
     private void updateAllocatedQty(BeerOrderDto beerOrderDto, BeerOrder beerOrder) {
-        BeerOrder allocatedOrder = repository.findOneById(beerOrderDto.getId());
+        BeerOrder allocatedOrder = repository.findById(beerOrderDto.getId()).orElseThrow();
 
         allocatedOrder.getBeerOrderLines().forEach(line -> {
             beerOrderDto.getBeerOrderLines().forEach(dtoLine -> {

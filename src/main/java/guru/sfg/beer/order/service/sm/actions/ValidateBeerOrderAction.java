@@ -35,12 +35,12 @@ public class ValidateBeerOrderAction implements Action<BeerOrderStatusEnum, Beer
 
         UUID orderId = (UUID) context.getMessageHeader(BeerOrderManagerImpl.PAYMENT_ID_HEADER);
 //        UUID orderId = (UUID) context.getMessage().getHeaders().get(BeerOrderManagerImpl.PAYMENT_ID_HEADER, UUID.class);
-        BeerOrder beerOrder = repository.findOneById(orderId);
+        BeerOrder beerOrder = repository.findById(orderId).orElseThrow();
         ValidateBeerOrderRequest validateBeerOrderEvent = new ValidateBeerOrderRequest(mapper.beerOrderToDto(beerOrder));
 
-        log.info("Validation request was send to: {}, //n with message {}", JmsConfig.BEER_ORDER_VALIDATION_REQUEST,
+        log.info("Validation request was send to: {}, //n with message {}", JmsConfig.VALIDATION_BEER_ORDER_REQUEST,
                 validateBeerOrderEvent);
-        jmsTemplate.convertAndSend(JmsConfig.BEER_ORDER_VALIDATION_REQUEST, validateBeerOrderEvent);
+        jmsTemplate.convertAndSend(JmsConfig.VALIDATION_BEER_ORDER_REQUEST, validateBeerOrderEvent);
 
 
     }

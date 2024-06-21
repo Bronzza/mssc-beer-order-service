@@ -32,7 +32,7 @@ public class BeerOrderStateInterceptor extends StateMachineInterceptorAdapter<Be
                                StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> stateMachine) {
 
         final Consumer<UUID> updateBeerOrderAccordingStatusInEvent = (paymentId) -> {
-            BeerOrder toSave = repository.findOneById(paymentId);
+            BeerOrder toSave = repository.findById(paymentId).orElseThrow();
             toSave.setOrderStatus(state.getId());
             repository.saveAndFlush(toSave);
         };

@@ -14,28 +14,21 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package guru.sfg.beer.order.service.repositories;
 
+package guru.sfg.beer.order.service.web.mappers;
 
+import common.model.BeerOrderDto;
+import common.model.CustomerDto;
 import guru.sfg.beer.order.service.domain.BeerOrder;
 import guru.sfg.beer.order.service.domain.Customer;
-import common.enums.BeerOrderStatusEnum;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-import javax.persistence.LockModeType;
-import java.util.List;
-import java.util.UUID;
+@Mapper(uses = {DateMapper.class, BeerOrderLineMapper.class})
+public interface CustomerMapper {
 
+    @Mapping(target = "name", source = "customer.customerName")
+    CustomerDto customerToDto(Customer customer);
 
-/**
- * Created by jt on 2019-01-26.
- */
-public interface BeerOrderRepository  extends JpaRepository<BeerOrder, UUID> {
-
-    Page<BeerOrder> findAllByCustomer(Customer customer, Pageable pageable);
-
-    List<BeerOrder> findAllByOrderStatus(BeerOrderStatusEnum beerOrderStatusEnum);
+    Customer dtoToCustomer(CustomerDto dto);
 }

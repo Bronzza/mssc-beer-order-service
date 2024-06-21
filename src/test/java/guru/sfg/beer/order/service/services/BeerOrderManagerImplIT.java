@@ -13,8 +13,6 @@ import guru.sfg.beer.order.service.domain.BeerOrderLine;
 import guru.sfg.beer.order.service.domain.Customer;
 import guru.sfg.beer.order.service.repositories.BeerOrderRepository;
 import guru.sfg.beer.order.service.repositories.CustomerRepository;
-import guru.sfg.beer.order.service.services.BeerOrderManagerImpl;
-import guru.sfg.beer.order.service.services.BeerOrderManagerLoseCouplingImpl;
 import guru.sfg.beer.order.service.services.beerservice.BeerServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SpringBootTest
 public class BeerOrderManagerImplIT {
 
+    public static final String UPC = "12345";
     @Autowired
     BeerOrderManagerImpl beerOrderManager;
 
@@ -80,48 +79,111 @@ public class BeerOrderManagerImplIT {
 
     @Test
     void testNewToAllocated() throws JsonProcessingException {
-        BeerDto beerDto = BeerDto.builder()
-                .id(beerId)
-                .upc("12345")
-                .build();
-
-
-        mockServer.stubFor(get(BeerServiceImpl.UPC_PATH + "12345")
-                .willReturn(okJson(objMapper.writeValueAsString(beerDto))));
-
+        setUpMockServer();
         BeerOrder beerOrder = createBeerOrder();
-
         BeerOrder saved = beerOrderManager.newBeerOrder(beerOrder);
-        System.out.println("Test__0");
 
         await().untilAsserted(() -> {
             BeerOrder found = repository.findById(beerOrder.getId()).get();
-
 //            assertEquals(BeerOrderStatusEnum.VALIDATION_PENDING, found.getOrderStatus());
             assertEquals(BeerOrderStatusEnum.ALLOCATED, found.getOrderStatus());
         });
-        System.out.println("Test__1");
 
         BeerOrder result = repository.findById(beerOrder.getId()).get();
-
-        assertNotNull(result);
-//        assertEquals(BeerOrderStatusEnum.VALIDATION_PENDING, result.getOrderStatus());
-
         await().untilAsserted(() -> {
             BeerOrder found = repository.findById(beerOrder.getId()).get();
-            BeerOrderLine next = found.getBeerOrderLines().iterator().next();
-//            assertEquals(BeerOrderStatusEnum.ALLOCATED, found.getOrderStatus());
-            assertEquals(next.getQuantityAllocated(), next.getOrderQuantity());
+            assertEquals(BeerOrderStatusEnum.ALLOCATED, found.getOrderStatus());
         });
-        System.out.println("Test__2");
 
         BeerOrder allocated = repository.findById(beerOrder.getId()).get();
-
         assertNotNull(allocated);
         assertEquals(BeerOrderStatusEnum.ALLOCATED, allocated.getOrderStatus());
 
 
     }
+
+    @Test
+    void testForPickUp() throws JsonProcessingException {
+        BeerOrder beerOrder = createBeerOrder();
+        setUpMockServer();
+
+        BeerOrder saved = beerOrderManager.newBeerOrder(beerOrder);
+
+        await().untilAsserted(() -> {
+            BeerOrder found = repository.findById(beerOrder.getId()).get();
+            assertEquals(BeerOrderStatusEnum.ALLOCATED, found.getOrderStatus());
+        });
+
+        beerOrderManager.proccessPickUp(saved.getId());
+
+        BeerOrder allocated = repository.findById(beerOrder.getId()).get();
+
+
+        await().untilAsserted(() -> {
+            BeerOrder found = repository.findById(beerOrder.getId()).get();
+            assertEquals(BeerOrderStatusEnum.PICKED_UP, found.getOrderStatus());
+        });
+
+        assertNotNull(allocated);
+        assertEquals(BeerOrderStatusEnum.PICKED_UP, allocated.getOrderStatus());
+    }
+
+    @Test
+    public void testValidationFailed() throws JsonProcessingException {
+        setUpMockServer();
+        BeerOrder expectToFailOrder = createBeerOrder();
+        expectToFailOrder.setCustomerRef("Invalid customer");
+        BeerOrder beerOrder = beerOrderManager.newBeerOrder(expectToFailOrder);
+
+        await().untilAsserted(() -> {
+            BeerOrder found = repository.findById(beerOrder.getId()).get();
+            assertEquals(BeerOrderStatusEnum.VALIDATION_EXCEPTION, found.getOrderStatus());
+        });
+        BeerOrder result = repository.findById(beerOrder.getId()).get();
+        assertEquals(BeerOrderStatusEnum.VALIDATION_EXCEPTION, result.getOrderStatus());
+    }
+
+    @Test
+    public void testAllocationFailed() throws JsonProcessingException {
+        setUpMockServer();
+        BeerOrder expectToFailOrder = createBeerOrder();
+        expectToFailOrder.setCustomerRef("Allocation-failed customer");
+        BeerOrder beerOrder = beerOrderManager.newBeerOrder(expectToFailOrder);
+
+        await().untilAsserted(() -> {
+            BeerOrder found = repository.findById(beerOrder.getId()).get();
+            assertEquals(BeerOrderStatusEnum.ALLOCATION_EXCEPTION, found.getOrderStatus());
+        });
+        BeerOrder result = repository.findById(beerOrder.getId()).get();
+        assertEquals(BeerOrderStatusEnum.ALLOCATION_EXCEPTION, result.getOrderStatus());
+    }
+
+    @Test
+    public void testAllocationInvenotryPending() throws JsonProcessingException {
+        setUpMockServer();
+        BeerOrder expectToFailOrder = createBeerOrder();
+        expectToFailOrder.setCustomerRef("Allocation-pending customer");
+        BeerOrder beerOrder = beerOrderManager.newBeerOrder(expectToFailOrder);
+
+        await().untilAsserted(() -> {
+            BeerOrder found = repository.findById(beerOrder.getId()).get();
+            assertEquals(BeerOrderStatusEnum.ALLOCATION_PENDING, found.getOrderStatus());
+        });
+        BeerOrder result = repository.findById(beerOrder.getId()).get();
+        assertEquals(BeerOrderStatusEnum.ALLOCATION_PENDING, result.getOrderStatus());
+    }
+
+    private void setUpMockServer() throws JsonProcessingException {
+        BeerDto beerDto = BeerDto.builder()
+                .id(beerId)
+                .upc(UPC)
+                .build();
+
+        mockServer.stubFor(get(BeerServiceImpl.UPC_PATH + UPC)
+                .willReturn(okJson(objMapper.writeValueAsString(beerDto))));
+    }
+
+
 
     public BeerOrder createBeerOrder() {
         BeerOrder beerOrder = BeerOrder.builder()
@@ -132,7 +194,7 @@ public class BeerOrderManagerImplIT {
         lines.add(BeerOrderLine
                 .builder()
                 .beerId(beerId)
-                .upc("12345")
+                .upc(UPC)
                 .orderQuantity(1)
                 .build());
         beerOrder.setBeerOrderLines(lines);

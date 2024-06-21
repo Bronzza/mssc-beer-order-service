@@ -17,27 +17,32 @@
 
 package guru.sfg.beer.order.service.web.controllers;
 
+import common.model.CustomerDto;
+import guru.sfg.beer.order.service.domain.Customer;
+import guru.sfg.beer.order.service.repositories.CustomerRepository;
 import guru.sfg.beer.order.service.services.BeerOrderService;
 import common.model.BeerOrderDto;
 import common.model.BeerOrderPagedList;
+import guru.sfg.beer.order.service.web.mappers.CustomerMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RequestMapping("/api/v1/customers/{customerId}/")
 @RestController
+@RequiredArgsConstructor
 public class BeerOrderController {
 
     private static final Integer DEFAULT_PAGE_NUMBER = 0;
     private static final Integer DEFAULT_PAGE_SIZE = 25;
 
     private final BeerOrderService beerOrderService;
-
-    public BeerOrderController(BeerOrderService beerOrderService) {
-        this.beerOrderService = beerOrderService;
-    }
 
     @GetMapping("orders")
     public BeerOrderPagedList listOrders(@PathVariable("customerId") UUID customerId,
@@ -71,4 +76,6 @@ public class BeerOrderController {
     public void pickupOrder(@PathVariable("customerId") UUID customerId, @PathVariable("orderId") UUID orderId){
         beerOrderService.pickupOrder(customerId, orderId);
     }
+
+
 }

@@ -12,10 +12,14 @@ import org.springframework.jms.support.converter.MessageType;
 @Configuration
 public class JmsConfig {
 
-    public static final String BEER_ORDER_VALIDATION_REQUEST = "validate-order";
-    public static final String BEER_ORDER_VALIDATION_RESPONSE = "validate-order-result";
-    public static final String BEER_ORDER_ALLOCATION_REQUEST = "allocate-order";
-    public static final String BEER_ORDER_ALLOCATION_RESPONSE = "allocate-order-result";
+    public static final String VALIDATION_BEER_ORDER_REQUEST = "validate-order";
+    public static final String VALIDATION_BEER_ORDER_RESPONSE = "validate-order-result";
+    public static final String ALLOCATION_BEER_ORDER_REQUEST = "allocate-order";
+    public static final String ALLOCATION_BEER_ORDER_RESPONSE = "allocate-order-result";
+    public static final String ALLOCATION_FAILURE = "allocate-failure";
+    public static final String PICK_UP_BEER_ORDER_RESPONSE = "pickup-order";
+    public static final String PICK_UP_BEER_ORDER_REQUEST = "pickup-order-result";
+    public static final String DE_ALLOCATION_BEER_ORDER_REQUEST = "deallocate-order";
 
     @Bean
     public MessageConverter messageConverter(ObjectMapper objectMapper) {
